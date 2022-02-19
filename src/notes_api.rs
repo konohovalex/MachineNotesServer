@@ -1,13 +1,28 @@
-use super::notes_data::{DateTime, Note, NoteContent};
+use super::notes_data::*;
+use actix_web::{
+    get,
+    web::{scope, Json, Query},
+    Responder, Scope,
+};
 use rand::Rng;
 
-static DUMMY_NOTE_TEXT: &str =
+const DUMMY_NOTE_TEXT: &str =
     "Заметка с очень длинным названием, которое не поместилось вот чуть-чуть\n
 И был этот текст крайне странным, и длина его превышала все границы адекватности\n
 В общем:\n
 Побывал я тут в Европе и повидал множество дивных вещей: архитектуру, людей";
 
-pub fn create_dummy_notes(items_amount: i32) -> Vec<Note> {
+pub fn notes_v1_scope() -> Scope {
+    scope("v1/notes").service(get_notes)
+}
+
+#[get("/")]
+async fn get_notes(pagination_info: Query<PaginationInfo>) -> impl Responder {
+    let notes = create_dummy_notes(pagination_info.page_size);
+    Json(notes)
+}
+
+fn create_dummy_notes(items_amount: i32) -> Vec<Note> {
     let mut notes_vec = Vec::new();
 
     let mut random_generator = rand::thread_rng();
@@ -21,7 +36,7 @@ pub fn create_dummy_notes(items_amount: i32) -> Vec<Note> {
     return notes_vec;
 }
 
-pub fn create_dummy_note(id: String, mode: i32) -> Note {
+fn create_dummy_note(id: String, mode: i32) -> Note {
     let note_content_order_number = 1;
     let note_content_id = format!("{}_{}", id, note_content_order_number);
     let date_time_created = DateTime {};

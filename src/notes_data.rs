@@ -1,7 +1,15 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+
+#[derive(Deserialize)]
+pub struct PaginationInfo {
+    #[serde(rename(deserialize = "pageSize"))]
+    pub page_size: i32,
+    pub page: i32,
+}
 
 #[derive(Serialize)]
 pub struct Note {
+    #[serde(rename(serialize = "id"))]
     pub id: String,
     #[serde(rename(serialize = "dateTimeCreated"))]
     pub date_time_created: DateTime,
@@ -18,12 +26,14 @@ pub struct DateTime {}
 pub enum NoteContent {
     #[serde(rename(serialize = "text"))]
     Text {
+        #[serde(rename(serialize = "id"))]
         id: String,
+        #[serde(rename(serialize = "content"))]
         content: String,
     },
-    
     #[serde(rename(serialize = "image"))]
     Image {
+        #[serde(rename(serialize = "id"))]
         id: String,
         #[serde(rename(serialize = "contentUrl"))]
         content_url: String,
@@ -31,6 +41,7 @@ pub enum NoteContent {
 
     #[serde(rename(serialize = "audio"))]
     Audio {
+        #[serde(rename(serialize = "id"))]
         id: String,
         #[serde(rename(serialize = "contentUrl"))]
         content_url: String,
