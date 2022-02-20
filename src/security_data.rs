@@ -57,3 +57,8 @@ pub struct Claims {
     pub exp: usize,
     pub iat: usize,
 }
+
+pub struct AuthToken {
+    pub access_token: String,
+    pub refresh_token: String,
+}

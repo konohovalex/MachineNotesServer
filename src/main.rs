@@ -7,6 +7,7 @@ mod account_dto;
 mod account_entity;
 mod account_interaction;
 mod error_data;
+mod middleware;
 mod notes_api;
 mod notes_data;
 mod postgres_database_connection;
@@ -16,6 +17,7 @@ mod security_data;
 mod utils;
 
 use actix_web::{App, HttpServer};
+use actix_web_httpauth::middleware::HttpAuthentication;
 use openssl::ssl::{SslAcceptor, SslAcceptorBuilder, SslFiletype, SslMethod};
 
 const LOCALHOST_WITH_PORT: &str = "localhost:8080";
@@ -26,10 +28,12 @@ async fn main() -> std::io::Result<()> {
 
     // let ssl_acceptor_builder = get_ssl_acceptor_builder();
 
-    let account_database_connection_pool = postgres_database_connection::get_database_connection_pool();
+    let account_database_connection_pool =
+        postgres_database_connection::get_database_connection_pool();
 
     HttpServer::new(move || {
         App::new()
+            .wrap(HttpAuthentication::bearer(middleware::bearer_auth_validator))
             .data(account_database_connection_pool.clone())
             .service(account_api::account_v1_scope())
             .service(notes_api::notes_v1_scope())

@@ -1,8 +1,8 @@
 use super::notes_data::*;
 use actix_web::{
-    get,
+    delete, get,
     web::{scope, Json, Query},
-    Responder, Scope,
+    HttpResponse, Responder, Scope,
 };
 use rand::Rng;
 
@@ -13,13 +13,20 @@ const DUMMY_NOTE_TEXT: &str =
 Побывал я тут в Европе и повидал множество дивных вещей: архитектуру, людей";
 
 pub fn notes_v1_scope() -> Scope {
-    scope("v1/notes").service(get_notes)
+    scope("v1/notes")
+        .service(get_notes)
+        .service(delete_all_notes)
 }
 
 #[get("/")]
 async fn get_notes(pagination_info: Query<PaginationInfo>) -> impl Responder {
     let notes = create_dummy_notes(pagination_info.page_size);
     Json(notes)
+}
+
+#[delete("")]
+async fn delete_all_notes() -> impl Responder {
+    HttpResponse::Ok()
 }
 
 fn create_dummy_notes(items_amount: i32) -> Vec<Note> {

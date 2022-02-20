@@ -1,7 +1,7 @@
 use super::{
-    schema::{auth_token, user_account},
-    security::generate_password_hash,
-    security_data::HashAlgorithm,
+    schema::user_account,
+    security,
+    security_data::{AuthToken, HashAlgorithm},
 };
 use diesel::{Insertable, Queryable};
 use std::{
@@ -18,11 +18,13 @@ pub struct InsertableUserAccountEntity {
     pub password_hash: Option<String>,
     pub password_hash_salt: Option<String>,
     pub password_hash_algorithm: Option<HashAlgorithm>,
+    pub access_token: String,
+    pub refresh_token: String,
 }
 
 impl InsertableUserAccountEntity {
     pub fn guest() -> Self {
-        let uuid = Uuid::new_v4();
+        let (uuid, auth_token) = Self::get_uuid_and_auth_token();
 
         InsertableUserAccountEntity {
             user_id: uuid.to_string(),
@@ -30,13 +32,15 @@ impl InsertableUserAccountEntity {
             password_hash: None,
             password_hash_salt: None,
             password_hash_algorithm: None,
+            access_token: auth_token.access_token,
+            refresh_token: auth_token.refresh_token,
         }
     }
 
     pub fn registered_user(user_name: String, password: String) -> Self {
-        let uuid = Uuid::new_v4();
+        let (uuid, auth_token) = Self::get_uuid_and_auth_token();
 
-        let password_hash_data = generate_password_hash(password.as_bytes());
+        let password_hash_data = security::generate_password_hash(password.as_bytes());
 
         InsertableUserAccountEntity {
             user_id: uuid.to_string(),
@@ -44,7 +48,17 @@ impl InsertableUserAccountEntity {
             password_hash: Some(password_hash_data.hash),
             password_hash_salt: Some(password_hash_data.salt),
             password_hash_algorithm: Some(password_hash_data.algorithm),
+            access_token: auth_token.access_token,
+            refresh_token: auth_token.refresh_token,
         }
+    }
+
+    fn get_uuid_and_auth_token() -> (Uuid, AuthToken) {
+        let uuid = Uuid::new_v4();
+
+        let auth_token = security::generate_auth_token(uuid.to_string());
+
+        (uuid, auth_token)
     }
 }
 
@@ -56,6 +70,8 @@ pub struct UserAccountEntity {
     pub password_hash: Option<String>,
     pub password_hash_salt: Option<String>,
     pub password_hash_algorithm: Option<HashAlgorithm>,
+    pub access_token: String,
+    pub refresh_token: String,
 }
 
 impl Display for UserAccountEntity {
@@ -66,11 +82,4 @@ impl Display for UserAccountEntity {
             write!(f, "guest")
         }
     }
-}
-
-#[derive(Insertable, Queryable)]
-#[table_name = "auth_token"]
-pub struct AuthTokenEntity {
-    pub user_id: String,
-    pub token: String,
 }
